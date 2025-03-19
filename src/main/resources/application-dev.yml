@@ -22,7 +22,7 @@ spring:
     driver-class-name: org.postgresql.Driver
 logging:
   level:
-    com.application.*: info
+    com.application.*: debug
 
 springdoc:
   swagger-ui.path: /swagger-ui.html

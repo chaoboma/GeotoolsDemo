@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Objects;
 
 public class UnPackeUtil {
     private static final Logger logger = LoggerFactory.getLogger(UnPackeUtil.class);
@@ -21,7 +22,7 @@ public class UnPackeUtil {
             ZipFile zip = new ZipFile(zipFile);
             /*zip4j默认用GBK编码去解压,这里设置编码为GBK的*/
             zip.setFileNameCharset("GBK");
-            logger.info("begin unpack zip file....");
+            //logger.info("begin unpack zip file....");
             zip.extractAll(destPath);
             // 如果解压需要密码
             if (password != null) {
@@ -29,6 +30,7 @@ public class UnPackeUtil {
                     zip.setPassword(password);
                 }
             }
+            zip = null;
         } catch (Exception e) {
             logger.error("解压失败：", e.getMessage(), e);
         }

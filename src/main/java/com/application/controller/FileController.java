@@ -254,6 +254,7 @@ public class FileController {
                 shapefileDataStore.dispose();
                 zis.close();
                 inputStream.close();
+                log.debug("clear end");
             }catch(Exception e){
                 e.printStackTrace();
             }
@@ -426,7 +427,8 @@ public class FileController {
                 }
                 geojsonObject.put("crs", crsJson);
                 uploadShpResp.setGeojson(geojsonObject);
-                shapefileDataStore.dispose();
+                log.debug("process geojson end");
+
 
             }catch (Exception e){
                 e.printStackTrace();
@@ -437,11 +439,17 @@ public class FileController {
         }
         if (folder.exists()) {
             try{
-
                 FileUtil.deleteDir(folder);
+                log.debug("remove folder end");
             }catch(Exception e){
                 e.printStackTrace();
             }
+        }
+        try{
+            shapefileDataStore.dispose();
+            log.debug("dispose dataStore end");
+        }catch(Exception e){
+            e.printStackTrace();
         }
         return Result.success(uploadShpResp);
 
