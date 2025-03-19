@@ -6,9 +6,13 @@ server:
       max: 4
       accept-count: 100000
 spring:
+  servlet:
+    multipart:
+      max-file-size: 128MB
+      max-request-size: 128MB
   threads:
     virtual:
-      enabled: true
+      enabled: false
   application:
     name: GeotoolsDemo
   datasource:
@@ -20,3 +24,8 @@ logging:
   level:
     com.application.*: info
 
+springdoc:
+  swagger-ui.path: /swagger-ui.html
+
+file:
+  path: d:\tmp
