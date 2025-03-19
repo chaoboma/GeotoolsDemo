@@ -25,7 +25,29 @@ logging:
     com.application.*: debug
 
 springdoc:
-  swagger-ui.path: /swagger-ui.html
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+#  group-configs:
+#    - group: "user"
+#      paths-to-match: '/user/**'
+#      packages-to-scan: 'com.nongda.controller'
+#    - group: "manager"
+#      paths-to-match: '/manager/**'
+#      packages-to-scan: 'com.nongda.controller'
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+  basic:
+    enable: true
+    username: root
+    password: 311412
+
 
 file:
   path: d:\tmp
