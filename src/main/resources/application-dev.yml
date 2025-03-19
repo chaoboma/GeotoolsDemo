@@ -1,0 +1,22 @@
+server:
+  port: 8080
+  tomcat:
+    threads:
+      min-spare: 1
+      max: 4
+      accept-count: 100000
+spring:
+  threads:
+    virtual:
+      enabled: true
+  application:
+    name: GeotoolsDemo
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&characterSetResults=utf8&useSSL=false&allowMultiQueries=true
+    username: postgres
+    password: qwer@123
+    driver-class-name: org.postgresql.Driver
+logging:
+  level:
+    com.application.*: info
+

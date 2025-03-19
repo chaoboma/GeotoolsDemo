@@ -1,0 +1,17 @@
+server:
+  port: 8080
+spring:
+  threads:
+    virtual:
+      enabled: false
+  application:
+    name: GeotoolsDemo
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf8&characterSetResults=utf8&useSSL=false&allowMultiQueries=true
+    username: postgres
+    password: qwer@123
+    driver-class-name: org.postgresql.Driver
+logging:
+  level:
+    com.application.*: info
+
