@@ -426,6 +426,7 @@ public class FileController {
                 }
                 geojsonObject.put("crs", crsJson);
                 uploadShpResp.setGeojson(geojsonObject);
+                shapefileDataStore.dispose();
 
             }catch (Exception e){
                 e.printStackTrace();
