@@ -71,8 +71,9 @@ public class FileController {
     @Operation(summary = "上传shp压缩包返回geojson，不落磁盘")
     @PostMapping(path = "/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Result<Object> upload(@RequestPart("file") MultipartFile file){
-        UploadShpResp uploadShpResp = new UploadShpResp();
+
         try{
+            UploadShpResp uploadShpResp = new UploadShpResp();
             String separator = "/";
             log.debug("separator:"+separator);
             byte [] byteArr = file.getBytes();
@@ -258,12 +259,12 @@ public class FileController {
             }catch(Exception e){
                 e.printStackTrace();
             }
-
+            return Result.success(uploadShpResp);
         }catch(Exception e){
-            e.printStackTrace();
+            return Result.error(CodeMsg.INTERNAL_EXCEPTION);
         }
 
-        return Result.success(uploadShpResp);
+
     }
 
     @Operation(summary = "上传shp压缩包返回geojson，落磁盘")
