@@ -18,10 +18,10 @@ public class InMemoryFileDemo {
         testBigFile();
 
     }
-    public static void test1(){
+    public static void testSimpleTextFile(){
         try{
             FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
-            Path foo = fs.getPath("/foo");
+            Path foo = fs.getPath("/dir");
             Files.createDirectory(foo);
 
             Path hello = foo.resolve("hello.txt"); // /foo/hello.txt
@@ -39,10 +39,10 @@ public class InMemoryFileDemo {
         try{
 
             FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
-            Path foo = fs.getPath("/foo");
+            Path foo = fs.getPath("/dir");
             Files.createDirectory(foo);
             Path hello = foo.resolve("hello.file");
-            FileInputStream fileInputStream = new FileInputStream(new File("D:\\docker\\MapTileDownloader\\docker_images_maptile-downloader-latest.tar.gz"));
+            FileInputStream fileInputStream = new FileInputStream(new File("D:\\tmp\\application.jar"));
             byte[] data = fileInputStream.readAllBytes();
             Thread.sleep(20000);
             Files.write(hello, data);
