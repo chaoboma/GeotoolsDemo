@@ -44,7 +44,7 @@ public class InMemoryFileDemo {
             Path hello = foo.resolve("hello.file");
             FileInputStream fileInputStream = new FileInputStream(new File("D:\\docker\\MapTileDownloader\\docker_images_maptile-downloader-latest.tar.gz"));
             byte[] data = fileInputStream.readAllBytes();
-
+            Thread.sleep(20000);
             Files.write(hello, data);
             data = null;
             Boolean result = Files.deleteIfExists(hello);
