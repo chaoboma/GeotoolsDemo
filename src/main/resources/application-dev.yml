@@ -1,6 +1,8 @@
 server:
   port: 8080
   tomcat:
+    #protocol: org.apache.coyote.http11.Http11NioProtocol
+    #use-direct-buffers: false
     threads:
       min-spare: 1
       max: 4
@@ -23,6 +25,7 @@ spring:
 logging:
   level:
     com.application.*: debug
+
 
 springdoc:
   swagger-ui.path: /swagger-ui.html

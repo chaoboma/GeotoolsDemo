@@ -16,19 +16,29 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import jodd.io.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.net.URLEncoder;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +77,80 @@ public class FileController {
     private FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
     @Value("${file.path}")
     private String localFilePath;
+
+    @GetMapping("/downloadMapped")
+    public void downloadMapped(@RequestParam String filename, HttpServletResponse response) throws IOException {
+        Path filePath = Paths.get("d:\\").resolve(filename).normalize();
+        try (FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ)) {
+            // 使用MappedByteBuffer来读取文件内容
+            MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
+
+            // 设置响应头
+            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"");
+            response.setContentLength((int) fileChannel.size());
+
+            // 将MappedByteBuffer的内容写入响应输出流
+            OutputStream out = response.getOutputStream();
+            byte[] buffer = new byte[8192];
+            while (mappedByteBuffer.hasRemaining()) {
+                int remaining = Math.min(mappedByteBuffer.remaining(), buffer.length);
+                mappedByteBuffer.get(buffer, 0, remaining);
+                out.write(buffer, 0, remaining);
+            }
+            out.flush();
+        }
+    }
+
+    @GetMapping("/download2")
+    public ResponseEntity<Object> download2(@RequestParam String filename) throws IOException {
+        Path filePath = Paths.get("d:\\").resolve(filename).normalize();
+
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(filePath.toFile()));
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(resource.contentLength())
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
+    }
+
+
+    @GetMapping("/download")
+    public ResponseEntity<String> downloadFile(HttpServletResponse response) throws IOException {
+        File zipFile = new File("D:\\geoserver-SNAPSHOT.zip");
+        if (zipFile.exists()) {
+
+            try{
+                InputStream inputStream = null;
+                ServletOutputStream ouputStream = null;
+                inputStream = new FileInputStream(zipFile);
+                response.setContentType("application/x-msdownload");
+                response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(zipFile.getName(), "UTF-8"));
+                // 设置一个总长度，否则无法估算进度
+                long fileSize = zipFile.length();
+                response.setHeader("Content-Length",String.valueOf(fileSize));
+                ouputStream = response.getOutputStream();
+                byte b[] = new byte[1024];
+                int n;
+                while ((n = inputStream.read(b)) != -1) {
+                    ouputStream.write(b, 0, n);
+                }
+                inputStream.close();
+                ouputStream.flush();
+                ouputStream.close();
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
+        }else{
+            return new ResponseEntity<>("该文件不存在", HttpStatus.OK);
+        }
+        return new ResponseEntity<>("文件下载成功", HttpStatus.OK);
+    }
 
     @Operation(summary = "上传shp压缩包返回geojson，不落磁盘")
     @PostMapping(path = "/upload",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
