@@ -1,8 +1,8 @@
 server:
   port: 8080
   tomcat:
-    #protocol: org.apache.coyote.http11.Http11NioProtocol
-    #use-direct-buffers: false
+    protocol: org.apache.coyote.http11.Http11NioProtocol
+    use-direct-buffers: true
     threads:
       min-spare: 1
       max: 4
