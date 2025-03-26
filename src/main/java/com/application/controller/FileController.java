@@ -569,7 +569,7 @@ public class FileController {
 
     }
     /**
-     * 文件上传方法
+     * 用NIO中channel上传文件的方法
      */
     @PostMapping(path = "/uploadFile",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Result<Object> uploadFile(@RequestPart("file") MultipartFile file) {
@@ -612,6 +612,48 @@ public class FileController {
                 if (outChannel != null) {
                     outChannel.close();
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Result.success("success");
+
+    }
+    /**
+     * 用传统stream上传文件的方法
+     */
+    @PostMapping(path = "/uploadFile2",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result<Object> uploadFile2(@RequestPart("file") MultipartFile file) {
+        //获取文件名
+        String realName = file.getOriginalFilename();
+
+        //创建流
+        InputStream fis = null;
+        FileOutputStream fos = null;
+        byte [] byteArr = null;
+        try {
+            byteArr = file.getBytes();
+            //log.debug("byteArr.length:"+byteArr.length);
+            fis = new ByteArrayInputStream(byteArr);
+            //开始上传
+            fos = new FileOutputStream(localFilePath+ File.separator+realName);
+            fos.write(byteArr);
+            //fis.transferTo(fos);
+        }catch (IOException e){
+            return Result.error(new CodeMsg("文件上传路径错误"));
+        }finally {
+            //关闭资源
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+                if (fis != null) {
+                    fis.close();
+                }
+                if (byteArr != null) {
+                    byteArr = null;
+                }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
