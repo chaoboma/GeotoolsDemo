@@ -111,7 +111,7 @@ public class FileController {
         Path filePath = Paths.get("d:\\").resolve(filename).normalize();
         try (FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ)) {
             // 使用MappedByteBuffer来读取文件内容
-            MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
+            //MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
             int fileSize = (int)fileChannel.size();
             // 设置响应头
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
