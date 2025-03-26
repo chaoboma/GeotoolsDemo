@@ -35,9 +35,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
+
 import java.nio.file.*;
 import java.util.HashMap;
 import java.util.List;
@@ -99,6 +104,30 @@ public class FileController {
                 out.write(buffer, 0, remaining);
             }
             out.flush();
+        }
+    }
+    @GetMapping("/downloadMapped2")
+    public void downloadMapped2(@RequestParam String filename, HttpServletResponse response) throws IOException {
+        Path filePath = Paths.get("d:\\").resolve(filename).normalize();
+        try (FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ)) {
+            // 使用MappedByteBuffer来读取文件内容
+            MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
+            int fileSize = (int)fileChannel.size();
+            // 设置响应头
+            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"");
+            response.setContentLength(fileSize);
+
+            // 将MappedByteBuffer的内容写入响应输出流
+            OutputStream outputStream = response.getOutputStream();
+            //获取输出流通道
+            WritableByteChannel writableByteChannel = Channels.newChannel(outputStream);
+            //采用零拷贝的方式实现文件的下载
+            fileChannel.transferTo(0,fileSize,writableByteChannel);
+            //关闭对应的资源
+            fileChannel.close();
+            outputStream.flush();
+            writableByteChannel.close();
         }
     }
 
@@ -537,6 +566,57 @@ public class FileController {
             e.printStackTrace();
         }
         return Result.success(uploadShpResp);
+
+    }
+    /**
+     * 文件上传方法
+     */
+    @PostMapping(path = "/uploadFile",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result<Object> uploadFile(@RequestPart("file") MultipartFile file) {
+        //获取文件名
+        String realName = file.getOriginalFilename();
+
+        //创建流
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        //创建通道
+        ReadableByteChannel inChannel = null;
+        FileChannel outChannel = null;
+        try {
+
+
+            inChannel = Channels.newChannel(file.getInputStream());
+            //开始上传
+            fos = new FileOutputStream(localFilePath+ File.separator+realName);
+            //通道间传输
+
+            outChannel = fos.getChannel();
+            //上传
+            outChannel.transferFrom(inChannel,0,file.getSize());
+
+
+        }catch (IOException e){
+            return Result.error(new CodeMsg("文件上传路径错误"));
+        }finally {
+            //关闭资源
+            try {
+                if (fis != null) {
+                    fis.close();
+                }
+                if (fos != null) {
+                    fos.close();
+                }
+                if (inChannel != null) {
+                    inChannel.close();
+                }
+                if (outChannel != null) {
+                    outChannel.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Result.success("success");
 
     }
 }
