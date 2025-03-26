@@ -569,6 +569,62 @@ public class FileController {
 
     }
     /**
+     * 用NIO中channel上传文件，并配置缓冲区的方法
+     */
+    @PostMapping(path = "/uploadFile3",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result<Object> uploadFile3(@RequestPart("file") MultipartFile file) {
+        //获取文件名
+        String realName = file.getOriginalFilename();
+
+        //创建流
+        FileInputStream fis = null;
+        FileOutputStream fos = null;
+        //创建通道
+        ReadableByteChannel inChannel = null;
+        FileChannel outChannel = null;
+        try {
+            inChannel = Channels.newChannel(file.getInputStream());
+            fos = new FileOutputStream(localFilePath+ File.separator+realName);
+            outChannel = fos.getChannel();
+            //ByteBuffer buffer = ByteBuffer.allocate(1024*32);
+
+            ByteBuffer buffer = ByteBuffer.allocateDirect(1024*1024*8);
+            while(inChannel.read(buffer) != -1){
+                buffer.flip();
+                outChannel.write(buffer);
+                //outChannel.transferFrom(inChannel,0,file.getSize());
+                buffer.clear();
+            }
+
+
+
+
+        }catch (IOException e){
+            return Result.error(new CodeMsg("文件上传路径错误"));
+        }finally {
+            //关闭资源
+            try {
+                if (fis != null) {
+                    fis.close();
+                }
+                if (fos != null) {
+                    fos.close();
+                }
+                if (inChannel != null) {
+                    inChannel.close();
+                }
+                if (outChannel != null) {
+                    outChannel.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return Result.success("success");
+
+    }
+
+    /**
      * 用NIO中channel上传文件的方法
      */
     @PostMapping(path = "/uploadFile",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
