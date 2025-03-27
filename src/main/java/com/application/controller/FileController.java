@@ -106,19 +106,18 @@ public class FileController {
             out.flush();
         }
     }
-    @GetMapping("/downloadMapped2")
-    public void downloadMapped2(@RequestParam String filename, HttpServletResponse response) throws IOException {
+
+    @GetMapping("/downloadChannel")
+    public void downloadChannel(@RequestParam String filename, HttpServletResponse response) throws IOException {
         Path filePath = Paths.get("d:\\").resolve(filename).normalize();
-        try (FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ)) {
-            // 使用MappedByteBuffer来读取文件内容
-            //MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
-            int fileSize = (int)fileChannel.size();
+        try {
+            FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ);
+            long fileSize = fileChannel.size();
             // 设置响应头
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"");
-            response.setContentLength(fileSize);
+            //response.setContentLength(fileSize);
 
-            // 将MappedByteBuffer的内容写入响应输出流
             OutputStream outputStream = response.getOutputStream();
             //获取输出流通道
             WritableByteChannel writableByteChannel = Channels.newChannel(outputStream);
@@ -128,6 +127,8 @@ public class FileController {
             fileChannel.close();
             outputStream.flush();
             writableByteChannel.close();
+        }catch(Exception e){
+            e.printStackTrace();
         }
     }
 
