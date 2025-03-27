@@ -626,6 +626,47 @@ public class FileController {
 
     }
     /**
+     * 用Streaming方式上传文件，避免MultipartFile临时文件，没有成功
+     */
+    @PostMapping(path = "/uploadFileStreaming")
+    public ResponseEntity<String> uploadFileStreaming(@RequestPart("file") MultipartFile file){
+        System.out.println("start:"+ TimeUtils.getNowTime());
+        ReadableByteChannel inChannel = null;
+        FileChannel outChannel = null;
+        FileOutputStream fos = null;
+        try{
+
+            inChannel = Channels.newChannel(file.getInputStream());
+            System.out.println("inChannel:"+ TimeUtils.getNowTime());
+            fos = new FileOutputStream(localFilePath+ File.separator+file.getOriginalFilename());
+            System.out.println("new FileOutputStream:"+ TimeUtils.getNowTime());
+            outChannel = fos.getChannel();
+            System.out.println("fos.getChannel:"+ TimeUtils.getNowTime());
+            outChannel.transferFrom(inChannel,0,file.getSize());
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            System.out.println("finally:"+ TimeUtils.getNowTime());
+            //关闭资源
+            try {
+                if (fos != null) {
+                    fos.close();
+                }
+                if (inChannel != null) {
+                    inChannel.close();
+                }
+                if (outChannel != null) {
+                    outChannel.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        return ResponseEntity.ok("File uploaded successfully");
+    }
+    /**
      * 用NIO中channel上传文件，并配置缓冲区的方法
      */
     @PostMapping(path = "/uploadFile3",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
