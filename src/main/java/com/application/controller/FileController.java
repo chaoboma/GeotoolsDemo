@@ -6,6 +6,7 @@ import com.application.common.CodeMsg;
 import com.application.common.Result;
 import com.application.domain.resp.UploadShpResp;
 import com.application.utils.JimFsUtil;
+import com.application.utils.TimeUtils;
 import com.application.utils.UnPackeUtil;
 import com.application.utils.ZipUtils;
 import com.application.utils.uuid.IdUtils;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jodd.io.FileUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -129,6 +131,60 @@ public class FileController {
             writableByteChannel.close();
         }catch(Exception e){
             e.printStackTrace();
+        }
+    }
+    @GetMapping("/downloadChannel2")
+    public void downloadChannel2(@RequestParam String filename, HttpServletResponse response) throws IOException {
+        Path filePath = Paths.get("d:\\").resolve(filename).normalize();
+        FileChannel inChannel = null;
+        OutputStream outputStream = null;
+        WritableByteChannel writableByteChannel = null;
+        ByteBuffer buffer = null;
+        try {
+            inChannel = FileChannel.open(filePath, StandardOpenOption.READ);
+            //long fileSize = inChannel.size();
+            // 设置响应头
+            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"");
+            //response.setContentLength(fileSize);
+
+            outputStream = response.getOutputStream();
+            //获取输出流通道
+            writableByteChannel = Channels.newChannel(outputStream);
+            buffer = ByteBuffer.allocateDirect(1024*1024);
+            while(inChannel.read(buffer) != -1){
+                buffer.flip();
+                writableByteChannel.write(buffer);
+                buffer.clear();
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally {
+            //关闭对应的资源
+            try{
+                inChannel.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            try{
+                outputStream.flush();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            try{
+                writableByteChannel.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            try{
+                buffer = null;
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
         }
     }
 
@@ -574,9 +630,10 @@ public class FileController {
      */
     @PostMapping(path = "/uploadFile3",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Result<Object> uploadFile3(@RequestPart("file") MultipartFile file) {
+        System.out.println("start:"+ TimeUtils.getNowTime());
         //获取文件名
         String realName = file.getOriginalFilename();
-
+        System.out.println("getOriginalFilename:"+ TimeUtils.getNowTime());
         //创建流
         FileInputStream fis = null;
         FileOutputStream fos = null;
@@ -585,24 +642,22 @@ public class FileController {
         FileChannel outChannel = null;
         try {
             inChannel = Channels.newChannel(file.getInputStream());
+            System.out.println("newChannel:"+ TimeUtils.getNowTime());
             fos = new FileOutputStream(localFilePath+ File.separator+realName);
+            System.out.println("new FileOutputStream:"+ TimeUtils.getNowTime());
             outChannel = fos.getChannel();
-            //ByteBuffer buffer = ByteBuffer.allocate(1024*32);
-
-            ByteBuffer buffer = ByteBuffer.allocateDirect(1024*1024*8);
+            System.out.println("fos.getChannel:"+ TimeUtils.getNowTime());
+            ByteBuffer buffer = ByteBuffer.allocateDirect(1024*1024*1);
             while(inChannel.read(buffer) != -1){
                 buffer.flip();
                 outChannel.write(buffer);
                 //outChannel.transferFrom(inChannel,0,file.getSize());
                 buffer.clear();
             }
-
-
-
-
         }catch (IOException e){
             return Result.error(new CodeMsg("文件上传路径错误"));
         }finally {
+            System.out.println("finally:"+ TimeUtils.getNowTime());
             //关闭资源
             try {
                 if (fis != null) {
@@ -640,18 +695,13 @@ public class FileController {
         ReadableByteChannel inChannel = null;
         FileChannel outChannel = null;
         try {
-
-
             inChannel = Channels.newChannel(file.getInputStream());
             //开始上传
             fos = new FileOutputStream(localFilePath+ File.separator+realName);
             //通道间传输
-
             outChannel = fos.getChannel();
             //上传
             outChannel.transferFrom(inChannel,0,file.getSize());
-
-
         }catch (IOException e){
             return Result.error(new CodeMsg("文件上传路径错误"));
         }finally {

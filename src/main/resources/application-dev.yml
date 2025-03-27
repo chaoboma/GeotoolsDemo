@@ -1,8 +1,8 @@
 server:
   port: 8080
   tomcat:
-    protocol: org.apache.coyote.http11.Http11NioProtocol
-    use-direct-buffers: true
+    #protocol: org.apache.coyote.http11.Http11NioProtocol
+    #use-direct-buffers: true
     threads:
       min-spare: 1
       max: 4
@@ -10,6 +10,7 @@ server:
 spring:
   servlet:
     multipart:
+      location: d:\upload
       max-file-size: 20GB
       max-request-size: 20GB
   threads:
