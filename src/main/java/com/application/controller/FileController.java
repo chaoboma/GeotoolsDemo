@@ -626,10 +626,10 @@ public class FileController {
 
     }
     /**
-     * 用Streaming方式上传文件，避免MultipartFile临时文件，没有成功
+     * 用Stream方式上传文件，避免MultipartFile临时文件，没有成功
      */
-    @PostMapping(path = "/uploadFileStreaming")
-    public ResponseEntity<String> uploadFileStreaming(@RequestPart("file") MultipartFile file){
+    @PostMapping(path = "/uploadFileStream")
+    public ResponseEntity<String> uploadFileStream(@RequestPart("file") MultipartFile file){
         System.out.println("start:"+ TimeUtils.getNowTime());
         ReadableByteChannel inChannel = null;
         FileChannel outChannel = null;
@@ -665,6 +665,44 @@ public class FileController {
 
 
         return ResponseEntity.ok("File uploaded successfully");
+    }
+    /**
+     * 用Stream方式上传文件，避免MultipartFile临时文件，成功了，需要设置spring.servlet.multipart.enabled: false
+     */
+    @PostMapping("/uploadFileStream2")
+    public String uploadFileStream2(HttpServletRequest request){
+        //System.out.println("1:"+TimeUtils.getNowTime());
+        String fileName = request.getHeader("filename");
+        File targetFile = new File("d:\\upload2", fileName);
+        //System.out.println("1:"+TimeUtils.getNowTime());
+        // 使用FileChannel直接写入磁盘
+        try {
+            InputStream is = request.getInputStream();
+
+            FileChannel channel = FileChannel.open(
+                    targetFile.toPath(),
+                    StandardOpenOption.CREATE_NEW,
+                    StandardOpenOption.WRITE);
+            // 通过通道传输数据
+            ByteBuffer buffer = ByteBuffer.allocateDirect(8192); // 直接缓冲区提升性能
+            ReadableByteChannel sourceChannel = Channels.newChannel(is);
+
+            while (sourceChannel.read(buffer) != -1) {
+                buffer.flip();
+                channel.write(buffer);
+                buffer.clear();
+            }
+            buffer = null;
+            is.close();
+            channel.close();
+            sourceChannel.close();
+            System.out.println("1:"+TimeUtils.getNowTime());
+            return "Upload success: " + fileName;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "Upload failed: " + e.getMessage();
+        }
+
     }
     /**
      * 用NIO中channel上传文件，并配置缓冲区的方法
