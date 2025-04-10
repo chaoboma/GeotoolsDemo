@@ -24,6 +24,7 @@ import jodd.io.FileUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -114,11 +115,12 @@ public class FileController {
         Path filePath = Paths.get("d:\\").resolve(filename).normalize();
         try {
             FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ);
-            long fileSize = fileChannel.size();
+            File file = filePath.toFile();
+            long fileSize=  file.length();
+            response.setHeader("Content-Length",String.valueOf(fileSize));
             // 设置响应头
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"");
-            //response.setContentLength(fileSize);
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"");
 
             OutputStream outputStream = response.getOutputStream();
             //获取输出流通道
@@ -142,11 +144,11 @@ public class FileController {
         ByteBuffer buffer = null;
         try {
             inChannel = FileChannel.open(filePath, StandardOpenOption.READ);
-            //long fileSize = inChannel.size();
-            // 设置响应头
+            File file = filePath.toFile();
+            long fileSize=  file.length();
+            response.setHeader("Content-Length",String.valueOf(fileSize));
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"");
-            //response.setContentLength(fileSize);
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"");
 
             outputStream = response.getOutputStream();
             //获取输出流通道
@@ -190,15 +192,15 @@ public class FileController {
 
     @GetMapping("/download2")
     public ResponseEntity<Object> download2(@RequestParam String filename) throws IOException {
-        Path filePath = Paths.get("d:\\").resolve(filename).normalize();
+        File filePath =new File("d:\\"+filename);
 
-        InputStreamResource resource = new InputStreamResource(new FileInputStream(filePath.toFile()));
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(filePath));
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getFileName().toString() + "\"");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath.getName() + "\"");
 
         return ResponseEntity.ok()
                 .headers(headers)
-                .contentLength(resource.contentLength())
+                .contentLength(filePath.length())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
     }
@@ -206,7 +208,7 @@ public class FileController {
 
     @GetMapping("/download")
     public ResponseEntity<String> downloadFile(HttpServletResponse response) throws IOException {
-        File zipFile = new File("D:\\geoserver-SNAPSHOT.zip");
+        File zipFile = new File("D:\\ext4.vhdx");
         if (zipFile.exists()) {
 
             try{
