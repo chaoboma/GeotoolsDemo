@@ -87,8 +87,8 @@ public class FileController {
     private String localFilePath;
 
     @GetMapping("/downloadMapped")
-    public void downloadMapped(@RequestParam String filename, HttpServletResponse response) throws IOException {
-        Path filePath = Paths.get("d:\\").resolve(filename).normalize();
+    public void downloadMapped(HttpServletResponse response) throws IOException {
+        Path filePath = Paths.get("d:\\ext4.vhdx");
         try (FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ)) {
             // 使用MappedByteBuffer来读取文件内容
             MappedByteBuffer mappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
@@ -111,23 +111,18 @@ public class FileController {
     }
 
     @GetMapping("/downloadChannel")
-    public void downloadChannel(@RequestParam String filename, HttpServletResponse response) throws IOException {
-        Path filePath = Paths.get("d:\\").resolve(filename).normalize();
+    public void downloadChannel(HttpServletResponse response) throws IOException {
+        Path filePath = Paths.get("d:\\ext4.vhdx");
         try {
             FileChannel fileChannel = FileChannel.open(filePath, StandardOpenOption.READ);
             File file = filePath.toFile();
             long fileSize=  file.length();
             response.setHeader("Content-Length",String.valueOf(fileSize));
-            // 设置响应头
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"");
-
             OutputStream outputStream = response.getOutputStream();
-            //获取输出流通道
             WritableByteChannel writableByteChannel = Channels.newChannel(outputStream);
-            //采用零拷贝的方式实现文件的下载
             fileChannel.transferTo(0,fileSize,writableByteChannel);
-            //关闭对应的资源
             fileChannel.close();
             outputStream.flush();
             writableByteChannel.close();
@@ -136,8 +131,8 @@ public class FileController {
         }
     }
     @GetMapping("/downloadChannel2")
-    public void downloadChannel2(@RequestParam String filename, HttpServletResponse response) throws IOException {
-        Path filePath = Paths.get("d:\\").resolve(filename).normalize();
+    public void downloadChannel2(HttpServletResponse response) throws IOException {
+        Path filePath = Paths.get("d:\\ext4.vhdx");
         FileChannel inChannel = null;
         OutputStream outputStream = null;
         WritableByteChannel writableByteChannel = null;
@@ -149,9 +144,7 @@ public class FileController {
             response.setHeader("Content-Length",String.valueOf(fileSize));
             response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
             response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"");
-
             outputStream = response.getOutputStream();
-            //获取输出流通道
             writableByteChannel = Channels.newChannel(outputStream);
             buffer = ByteBuffer.allocateDirect(1024*1024);
             while(inChannel.read(buffer) != -1){
@@ -162,7 +155,6 @@ public class FileController {
         }catch(Exception e){
             e.printStackTrace();
         }finally {
-            //关闭对应的资源
             try{
                 inChannel.close();
             }catch (Exception e){
@@ -191,8 +183,8 @@ public class FileController {
     }
 
     @GetMapping("/download2")
-    public ResponseEntity<Object> download2(@RequestParam String filename) throws IOException {
-        File filePath =new File("d:\\"+filename);
+    public ResponseEntity<Object> download2() throws IOException {
+        File filePath =new File("d:\\ext4.vhdx");
 
         InputStreamResource resource = new InputStreamResource(new FileInputStream(filePath));
         HttpHeaders headers = new HttpHeaders();
@@ -207,37 +199,30 @@ public class FileController {
 
 
     @GetMapping("/download")
-    public ResponseEntity<String> downloadFile(HttpServletResponse response) throws IOException {
-        File zipFile = new File("D:\\ext4.vhdx");
-        if (zipFile.exists()) {
-
-            try{
-                InputStream inputStream = null;
-                ServletOutputStream ouputStream = null;
-                inputStream = new FileInputStream(zipFile);
-                response.setContentType("application/x-msdownload");
-                response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(zipFile.getName(), "UTF-8"));
-                // 设置一个总长度，否则无法估算进度
-                long fileSize = zipFile.length();
-                response.setHeader("Content-Length",String.valueOf(fileSize));
-                ouputStream = response.getOutputStream();
-                byte b[] = new byte[1024];
-                int n;
-                while ((n = inputStream.read(b)) != -1) {
-                    ouputStream.write(b, 0, n);
-                }
-                inputStream.close();
-                ouputStream.flush();
-                ouputStream.close();
-
-            }catch(Exception e){
-                e.printStackTrace();
+    public void download(HttpServletResponse response) throws IOException {
+        File file = new File("D:\\ext4.vhdx");
+        try{
+            InputStream inputStream = null;
+            ServletOutputStream ouputStream = null;
+            inputStream = new FileInputStream(file);
+            response.setContentType("application/x-msdownload");
+            response.setHeader("Content-Disposition", "attachment;filename=" + URLEncoder.encode(file.getName(), "UTF-8"));
+            long fileSize = file.length();
+            response.setHeader("Content-Length",String.valueOf(fileSize));
+            ouputStream = response.getOutputStream();
+            byte b[] = new byte[1024];
+            int n;
+            while ((n = inputStream.read(b)) != -1) {
+                ouputStream.write(b, 0, n);
             }
+            inputStream.close();
+            ouputStream.flush();
+            ouputStream.close();
 
-        }else{
-            return new ResponseEntity<>("该文件不存在", HttpStatus.OK);
+        }catch(Exception e){
+            e.printStackTrace();
         }
-        return new ResponseEntity<>("文件下载成功", HttpStatus.OK);
+
     }
 
     @Operation(summary = "上传shp压缩包返回geojson，不落磁盘")
